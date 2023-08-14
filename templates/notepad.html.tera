@@ -1,0 +1,23 @@
+{% extends "base" %}
+{% block title %}dead drop{% endblock title %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        #notepad textarea {
+            border: 1px var(--bord) solid;
+            width: calc(100vw - 1rem);
+            height: calc(100vh - 3rem);
+            margin: 0.5rem;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+        #notepad #lastupdated {
+            display: fixed;
+            bottom: 3rem;
+        }
+    </style>
+    <script type="text/javascript" src="dead-drop.js"></script>
+{% endblock head %}
+{% block content %}
+    <div id="notepad"></div>
+{% endblock content %}

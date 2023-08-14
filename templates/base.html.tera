@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block head %}
+    <style type="text/css">
+        :root {
+            --back: #ccc;
+            --bord: #eee;
+            --fore: #333;
+        }
+        html, body, textarea { margin: 0; padding: 0; }
+        body, textarea {
+            color: var(--fore);
+            background-color: var(--back);
+        }
+        textarea:focus { 
+            outline: none !important;
+        }
+    </style>
+    <title>{% block title %}{% endblock title %}</title>
+    {% endblock head %}
+</head>
+<body>
+    <div id="content">{% block content %}{% endblock content %}</div>
+</body>
+</html>
