@@ -12,8 +12,13 @@
             font-size: 1rem;
         }
         #notepad #lastupdated {
-            display: fixed;
-            bottom: 3rem;
+            position: fixed;
+            bottom: 0;
+            font-family: sans-serif;
+            font-size: 0.75rem;
+            background: #000;
+            color: #ccc;
+            padding: 0.25rem;
         }
     </style>
     <script type="text/javascript" src="dead-drop.js"></script>

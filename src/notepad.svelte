@@ -66,4 +66,4 @@
 </script>
 
 <textarea bind:value on:change="{onChange}" />
-<div id="lastupdated">{lastUpdatedHuman}</div>
+<div id="lastupdated">Updated: {lastUpdatedHuman}</div>
