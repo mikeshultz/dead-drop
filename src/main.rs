@@ -9,10 +9,12 @@ use rocket::serde::{json::Json, json::Value, Deserialize, Serialize};
 use rocket::Request;
 use rocket_dyn_templates::{context, Template};
 use std::collections::HashMap;
+use std::env::var;
 use std::sync::Mutex;
 use std::time::SystemTime;
 
 const VALID_NAME: &str = r"^([A-Za-z0-9_-]{1,24})$";
+const DEFAULT_TITLE: &str = "dead drop";
 
 ///
 /// Data structures
@@ -60,6 +62,11 @@ fn safe_name(slug: &str) -> Option<&str> {
         Some(m) => Some(m.as_str()),
         None => None,
     }
+}
+
+/// Return the page title, derived from the TITLE env var
+fn title() -> String {
+    var("TITLE").unwrap_or(DEFAULT_TITLE.to_string())
 }
 
 ///
@@ -169,14 +176,14 @@ fn get_note<'r>(state: &'r rocket::State<DeadState>, name: &str) -> Either<Templ
                 Some(note) => Left(Template::render(
                     "notepad",
                     context! {
-                        title: format!("dead drop ({})", safe_name),
+                        title: format!("{} ({})", title(), safe_name),
                         note_body: note.body.as_str(),
                     },
                 )),
                 None => Left(Template::render(
                     "notepad",
                     context! {
-                        title: format!("dead drop ({})", safe_name),
+                        title: format!("{} ({})", title(), safe_name),
                     },
                 )),
             };
@@ -191,7 +198,7 @@ fn index() -> Template {
     Template::render(
         "index",
         context! {
-            title: "dead drop",
+            title: title(),
         },
     )
 }
