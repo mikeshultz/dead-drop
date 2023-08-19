@@ -20,7 +20,7 @@
     }
 
     function humanUnixTime(unix: number): string {
-        return (new Date(unix * 1000)).toLocaleString()
+        return unix ? (new Date(unix * 1000)).toLocaleString() : ''
     }
 
     function update({ body, updated }: NoteResponse) {
@@ -57,7 +57,7 @@
         }, CHECK_INTERVAL)
     }
 
-    function onChange(): void {
+    function onKeyUp(): void {
         if (timeout) clearTimeout(timeout)
         timeout = setTimeout(() => {
             fetch(`/${NAME}`, {
@@ -73,5 +73,5 @@
     }
 </script>
 
-<textarea bind:value on:change="{onChange}" />
-<div id="lastupdated">Updated: {lastUpdatedHuman}</div>
+<textarea bind:value on:keyup="{onKeyUp}" />
+<div id="lastupdated">{lastUpdatedHuman ? `Updated: ${lastUpdatedHuman}` : ''}</div>
