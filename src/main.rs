@@ -1,30 +1,39 @@
 #[macro_use]
 extern crate rocket;
+use either::{Either, Left, Right};
+use regex::Regex;
 use rocket::http::Status;
-use rocket::response::content;
-use rocket::serde::{json::Json, Deserialize, Serialize};
-use rocket::{Request, State};
+use rocket::response::{content, Redirect, Responder};
+use rocket::serde::json::json;
+use rocket::serde::{json::Json, json::Value, Deserialize, Serialize};
+use rocket::Request;
 use rocket_dyn_templates::{context, Template};
-
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::SystemTime;
+
+const VALID_NAME: &str = r"^([A-Za-z0-9_-]{1,24})$";
 
 ///
 /// Data structures
 ///
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
+struct DeadState {
+    notes: Mutex<HashMap<String, Note>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde()]
 struct Note {
-    updated: AtomicU64,
-    body: Mutex<String>,
+    updated: u64,
+    body: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde()]
 struct NoteRequest {
-    body: Mutex<String>,
+    body: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -33,50 +42,158 @@ struct UpdatedResponse {
     updated: u64,
 }
 
+#[derive(Responder)]
+enum JsonResponse<T> {
+    #[response(status = 200)]
+    Ok(Json<T>),
+    #[response(status = 404)]
+    NotFound(Value),
+}
+
+/// Get safe name from given param value
+fn safe_name(slug: &str) -> Option<&str> {
+    let re = Regex::new(VALID_NAME).unwrap();
+
+    let matched = re.find(slug);
+
+    match matched {
+        Some(m) => Some(m.as_str()),
+        None => None,
+    }
+}
+
 ///
 /// Routes
 ///
 
-#[get("/")]
-fn index() -> Template {
-    Template::render(
-        "notepad",
-        context! {
-            title: "dead drop",
-        },
-    )
-}
-
-#[get("/dead-drop.js")]
+#[get("/static/dead-drop.js")]
 fn js() -> content::RawJavaScript<&'static str> {
     content::RawJavaScript(include_str!("../static/dead-drop.js"))
 }
 
-#[get("/notepad", format = "json")]
-fn get_notepad(note: &State<Note>) -> Json<&Note> {
-    Json(note.inner())
+#[get("/favicon.ico")]
+fn favicon() -> Status {
+    Status::NotFound
 }
 
-#[get("/updated", format = "json")]
-fn get_updated(note: &State<Note>) -> Json<UpdatedResponse> {
-    Json(UpdatedResponse {
-        updated: note.inner().updated.load(Ordering::Relaxed),
-    })
+#[get("/robots.txt")]
+fn robots() -> &'static str {
+    "User-agent: *\n\
+Allow: /$\n\
+Disallow: /\n"
 }
 
-#[post("/notepad", format = "json", data = "<input>")]
-fn post_notepad(state: &State<Note>, input: Json<NoteRequest>) -> Json<&Note> {
-    let now = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .ok()
-        .expect("Failed to get system time")
-        .as_secs();
+#[get("/<name>/updated", format = "application/json")]
+fn get_updated_json<'r>(
+    state: &'r rocket::State<DeadState>,
+    name: &str,
+) -> JsonResponse<UpdatedResponse> {
+    match safe_name(name) {
+        Some(safe_name) => {
+            return match state.notes.lock().unwrap().get(safe_name) {
+                Some(note) => JsonResponse::Ok(Json(UpdatedResponse {
+                    updated: note.updated,
+                })),
+                None => JsonResponse::Ok(Json(UpdatedResponse { updated: 0 })),
+            };
+        }
+        None => JsonResponse::NotFound(json!({
+            "success": false,
+            "code": 404,
+            "error": "Note not found",
+        })),
+    }
+}
 
-    // Update cache
-    state.updated.store(now, Ordering::Relaxed);
-    *state.body.lock().unwrap() = String::from(input.body.lock().unwrap().clone());
+#[post("/<name>", format = "application/json", data = "<input>")]
+fn post_note<'r>(
+    state: &'r rocket::State<DeadState>,
+    name: &str,
+    input: Json<NoteRequest>,
+) -> JsonResponse<Note> {
+    match safe_name(name) {
+        Some(safe_name) => {
+            let now = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .ok()
+                .expect("Failed to get system time")
+                .as_secs();
 
-    Json(state.inner())
+            state.notes.lock().unwrap().insert(
+                String::from(safe_name),
+                Note {
+                    body: input.body.as_str().to_string(),
+                    updated: now,
+                },
+            );
+
+            JsonResponse::Ok(Json(Note {
+                body: input.body.as_str().to_string(),
+                updated: now,
+            }))
+        }
+        // 404 on a bad name
+        None => JsonResponse::NotFound(json!({
+            "success": false,
+            "code": 400,
+            "error": "Invalid name",
+        })),
+    }
+}
+
+#[get("/<name>", format = "application/json", rank = 2)]
+fn get_note_json<'r>(state: &'r rocket::State<DeadState>, name: &str) -> JsonResponse<Note> {
+    match safe_name(name) {
+        Some(safe_name) => {
+            return match state.notes.lock().unwrap().get(safe_name) {
+                Some(note) => JsonResponse::Ok(Json(note.clone())),
+                None => JsonResponse::Ok(Json(Note {
+                    body: String::new(),
+                    updated: 0,
+                })),
+            };
+        }
+        None => JsonResponse::NotFound(json!({
+            "success": false,
+            "code": 404,
+            "error": "Not found",
+        })),
+    }
+}
+
+#[get("/<name>", format = "text/html")]
+fn get_note<'r>(state: &'r rocket::State<DeadState>, name: &str) -> Either<Template, Redirect> {
+    match safe_name(name) {
+        Some(safe_name) => {
+            return match state.notes.lock().unwrap().get(safe_name) {
+                Some(note) => Left(Template::render(
+                    "notepad",
+                    context! {
+                        title: format!("dead drop ({})", safe_name),
+                        note_body: note.body.as_str(),
+                    },
+                )),
+                None => Left(Template::render(
+                    "notepad",
+                    context! {
+                        title: format!("dead drop ({})", safe_name),
+                    },
+                )),
+            };
+        }
+        // 301 redirect to /
+        None => Right(Redirect::moved("/")),
+    }
+}
+
+#[get("/")]
+fn index() -> Template {
+    Template::render(
+        "index",
+        context! {
+            title: "dead drop",
+        },
+    )
 }
 
 ///
@@ -92,9 +209,7 @@ fn response_error(code: u16, message: &str) -> String {
 
 /// Catch the error statuses and respond with JSON
 #[catch(default)]
-fn default_catcher(status: Status, request: &Request) -> String {
-    println!("{}: {}", status, request.uri());
-
+fn default_catcher(status: Status, _request: &Request) -> String {
     let reason = status.reason();
     response_error(
         status.code,
@@ -114,12 +229,20 @@ fn rocket() -> _ {
     rocket::build()
         .mount(
             "/",
-            routes![index, js, get_notepad, get_updated, post_notepad],
+            routes![
+                index,
+                js,
+                favicon,
+                get_note,
+                get_note_json,
+                get_updated_json,
+                post_note,
+                robots,
+            ],
         )
         .register("/", catchers![default_catcher])
-        .manage(Note {
-            body: Mutex::new(String::new()),
-            updated: AtomicU64::new(0),
+        .manage(DeadState {
+            notes: Mutex::new(HashMap::new()),
         })
         .attach(Template::fairing())
 }

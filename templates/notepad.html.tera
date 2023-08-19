@@ -1,5 +1,5 @@
 {% extends "base" %}
-{% block title %}dead drop{% endblock title %}
+{% block title %}{% if title %}{{ title }}{% else %}{{ super() }}{% endif %}{% endblock title %}
 {% block head %}
     {{ super() }}
     <style type="text/css">
@@ -21,8 +21,9 @@
             padding: 0.25rem;
         }
     </style>
-    <script type="text/javascript" src="dead-drop.js"></script>
+    <script type="text/javascript" src="static/dead-drop.js"></script>
 {% endblock head %}
 {% block content %}
+    {% if note_body %}<input type="hidden" id="ssrbody" value="{{ note_body }}" />{% endif %}
     <div id="notepad"></div>
 {% endblock content %}

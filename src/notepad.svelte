@@ -1,4 +1,5 @@
 <script type="text/typescript" lang="ts">
+    const NAME = document.location.toString().split('/').pop()
     const CHECK_INTERVAL = 5000
     const UPDATE_INTERVAL = 1000
 
@@ -29,19 +30,26 @@
     }
 
     function loadNote() {
-        return fetch('/notepad').then(res => res.json().then(update))
+        return fetch(`/${NAME}`, { headers: new Headers({ Accept: 'application/json' }) }).then(res => res.json().then(update))
     }
 
     $: if (!loaded) {
-        loadNote().then(() => {
+        const ssrBody = document.getElementById('ssrbody')?.getAttribute('value')
+        if (ssrBody) {
+            const ssrUpdated = document.getElementById('ssrupdated')?.getAttribute('value')
+            update({ body: ssrBody, updated: ssrUpdated ? parseInt(ssrUpdated) : 0 })
             loaded = true
-        })
+        } else {
+            loadNote().then(() => {
+                loaded = true
+            })
+        }
     }
 
     $: if (loaded) {
         if (interval) clearInterval(interval)
         interval = setInterval(() => {
-            fetch('/updated').then(res => {
+            fetch(`/${NAME}/updated`).then(res => {
                 res.json().then(({ updated }: UpdatedResponse) => {
                     if (updated > lastUpdated) loadNote()
                 })
@@ -52,7 +60,7 @@
     function onChange(): void {
         if (timeout) clearTimeout(timeout)
         timeout = setTimeout(() => {
-            fetch('/notepad', {
+            fetch(`/${NAME}`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",

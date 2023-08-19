@@ -18,7 +18,7 @@
             outline: none !important;
         }
     </style>
-    <title>{% block title %}{% endblock title %}</title>
+    <title>{% block title %}dead drop{% endblock title %}</title>
     {% endblock head %}
 </head>
 <body>
