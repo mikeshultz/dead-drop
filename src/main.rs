@@ -8,6 +8,7 @@ use rocket::serde::json::json;
 use rocket::serde::{json::Json, json::Value, Deserialize, Serialize};
 use rocket::Request;
 use rocket_dyn_templates::{context, Template};
+use rocket_governor::{Method, Quota, RocketGovernable, RocketGovernor};
 use std::collections::HashMap;
 use std::env::var;
 use std::sync::Mutex;
@@ -44,6 +45,15 @@ struct UpdatedResponse {
     updated: u64,
 }
 
+pub struct Limiter;
+
+impl<'r> RocketGovernable<'r> for Limiter {
+    fn quota(_method: Method, _route_name: &str) -> Quota {
+        // 2rps
+        Quota::per_second(Self::nonzero(2u32))
+    }
+}
+
 #[derive(Responder)]
 enum JsonResponse<T> {
     #[response(status = 200)]
@@ -74,7 +84,7 @@ fn title() -> String {
 ///
 
 #[get("/static/dead-drop.js")]
-fn js() -> content::RawJavaScript<&'static str> {
+fn js(_limiter: RocketGovernor<Limiter>) -> content::RawJavaScript<&'static str> {
     content::RawJavaScript(include_str!("../static/dead-drop.js"))
 }
 
@@ -94,6 +104,7 @@ Disallow: /\n"
 fn get_updated_json<'r>(
     state: &'r rocket::State<DeadState>,
     name: &str,
+    _limiter: RocketGovernor<Limiter>,
 ) -> JsonResponse<UpdatedResponse> {
     match safe_name(name) {
         Some(safe_name) => {
@@ -117,6 +128,7 @@ fn post_note<'r>(
     state: &'r rocket::State<DeadState>,
     name: &str,
     input: Json<NoteRequest>,
+    _limiter: RocketGovernor<Limiter>,
 ) -> JsonResponse<Note> {
     match safe_name(name) {
         Some(safe_name) => {
@@ -149,7 +161,11 @@ fn post_note<'r>(
 }
 
 #[get("/<name>", format = "application/json", rank = 2)]
-fn get_note_json<'r>(state: &'r rocket::State<DeadState>, name: &str) -> JsonResponse<Note> {
+fn get_note_json<'r>(
+    state: &'r rocket::State<DeadState>,
+    name: &str,
+    _limiter: RocketGovernor<Limiter>,
+) -> JsonResponse<Note> {
     match safe_name(name) {
         Some(safe_name) => {
             return match state.notes.lock().unwrap().get(safe_name) {
@@ -169,7 +185,11 @@ fn get_note_json<'r>(state: &'r rocket::State<DeadState>, name: &str) -> JsonRes
 }
 
 #[get("/<name>", format = "text/html")]
-fn get_note<'r>(state: &'r rocket::State<DeadState>, name: &str) -> Either<Template, Redirect> {
+fn get_note<'r>(
+    state: &'r rocket::State<DeadState>,
+    name: &str,
+    _limiter: RocketGovernor<Limiter>,
+) -> Either<Template, Redirect> {
     match safe_name(name) {
         Some(safe_name) => {
             return match state.notes.lock().unwrap().get(safe_name) {
@@ -194,7 +214,7 @@ fn get_note<'r>(state: &'r rocket::State<DeadState>, name: &str) -> Either<Templ
 }
 
 #[get("/")]
-fn index() -> Template {
+fn index(_limiter: RocketGovernor<Limiter>) -> Template {
     Template::render(
         "index",
         context! {
@@ -224,7 +244,7 @@ fn response_error_json(code: u16, message: &str) -> String {
     )
 }
 
-/// Catch the error statuses and respond with JSON
+/// Catch and handle the error statuses
 #[catch(default)]
 fn default_catcher(status: Status, request: &Request) -> Either<Template, String> {
     let reason = status.reason();
