@@ -2,7 +2,7 @@
 extern crate rocket;
 use either::{Either, Left, Right};
 use regex::Regex;
-use rocket::http::Status;
+use rocket::http::{Accept, Status};
 use rocket::response::{content, Redirect, Responder};
 use rocket::serde::json::json;
 use rocket::serde::{json::Json, json::Value, Deserialize, Serialize};
@@ -207,7 +207,17 @@ fn index() -> Template {
 /// Handlers
 ///
 
-fn response_error(code: u16, message: &str) -> String {
+fn response_error_html(code: u16, message: &str) -> Template {
+    Template::render(
+        "error",
+        context! {
+            title: format!("Error {} - {}", code, message),
+            error_description: "Penis",
+        },
+    )
+}
+
+fn response_error_json(code: u16, message: &str) -> String {
     format!(
         "{{\"success\": false, \"code\": {}, \"error\": \"{}\"}}",
         code, message
@@ -216,15 +226,26 @@ fn response_error(code: u16, message: &str) -> String {
 
 /// Catch the error statuses and respond with JSON
 #[catch(default)]
-fn default_catcher(status: Status, _request: &Request) -> String {
+fn default_catcher(status: Status, request: &Request) -> Either<Template, String> {
     let reason = status.reason();
-    response_error(
+
+    if request.accept().is_some_and(|a| *a == Accept::JSON) {
+        return Right(response_error_json(
+            status.code,
+            match reason {
+                Some(reason) => reason,
+                None => "unknown",
+            },
+        ));
+    }
+
+    Left(response_error_html(
         status.code,
         match reason {
             Some(reason) => reason,
             None => "unknown",
         },
-    )
+    ))
 }
 
 ///
