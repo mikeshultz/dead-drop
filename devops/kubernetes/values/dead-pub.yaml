@@ -1,0 +1,20 @@
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    acme.cert-manager.io/http01-edit-in-place: "true"
+  hosts:
+    - host: dead.pub
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: www.dead.pub
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+   - secretName: dead-pub-tls
+     hosts:
+       - dead.pub
+       - www.dead.pub

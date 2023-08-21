@@ -1,0 +1,32 @@
+FROM rust:alpine3.17
+
+RUN apk add --virtual .build-deps gcc musl-dev #libpcrecpp
+#RUN apk add rust cargo nodejs-current yarn
+#RUN apk add rustup nodejs-current yarn
+RUN apk add nodejs-current yarn
+
+RUN mkdir -p /build/src/components /build/static /build/templates
+
+WORKDIR /build
+
+COPY package.json /build/
+COPY tsconfig.json /build/
+COPY webpack.config.js /build/
+COPY yarn.lock /build/
+COPY Rocket.toml /build/
+COPY Cargo.toml /build/
+COPY Cargo.lock /build/
+COPY build.rs /build/
+
+COPY src/* /build/src/
+COPY src/components* /build/src/components
+COPY templates/* /build/templates/
+
+RUN ls -lah
+RUN yarn
+RUN cargo build --release
+RUN cp target/release/dead-drop /sbin/
+
+EXPOSE 9999/tcp
+
+ENTRYPOINT ["dead-drop"]
