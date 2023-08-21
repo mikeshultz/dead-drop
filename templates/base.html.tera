@@ -14,8 +14,8 @@
         }
 
         html, body, textarea { margin: 0; padding: 0; }
-        body { font-family: Georgia, "Times New Roman", serif; }
         body, textarea {
+            font-family: Georgia, "Times New Roman", serif;
             color: var(--fore);
             background-color: var(--back);
         }
