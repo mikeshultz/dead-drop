@@ -1,21 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     {% block head %}
     <style type="text/css">
         :root {
             --back: #ccc;
             --bord: #eee;
             --fore: #333;
+
+            --desktop-width: 768px;
         }
+
         html, body, textarea { margin: 0; padding: 0; }
+        body { font-family: Georgia, "Times New Roman", serif; }
         body, textarea {
             color: var(--fore);
             background-color: var(--back);
         }
         textarea:focus { 
             outline: none !important;
+        }
+
+        #content {
+            margin: 0.1rem;
+        }
+
+        @media (min-width: 648px)  {
+            #content {
+                margin: 1rem;
+            }
         }
     </style>
     <title>{% block title %}dead drop{% endblock title %}</title>

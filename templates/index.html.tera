@@ -1,14 +1,5 @@
 {% extends "base" %}
 {% block title %}{% if title %}{{ title }}{% else %}{{ super() }}{% endif %}{% endblock title %}
-{% block head %}
-    {{ super() }}
-    <style type="text/css">
-        #content {
-            margin: 1rem;
-        }
-    </style>
-    <!-- <script type="text/javascript" src="static/dead-drop.js"></script> -->
-{% endblock head %}
 {% block content %}
     <h1>dead.pub</h1>
     <p>Temporary scrach pads to share text.</p>

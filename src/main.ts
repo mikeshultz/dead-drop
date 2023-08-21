@@ -1,4 +1,4 @@
-import Notepad from './notepad.svelte';
+import Notepad from './components/notepad.svelte';
 
 document.addEventListener("DOMContentLoaded", function(event) {
     new Notepad({
