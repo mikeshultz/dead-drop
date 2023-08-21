@@ -20,3 +20,9 @@ cargo watch -x run
 ```bash
 helm install --create-namespace -n dead-pub dead-pub devops/kubernetes/charts/dead-drop -f devops/kubernetes/charts/dead-drop/values.yaml -f devops/kubernetes/values/dead-pub.yaml
 ```
+
+## TODO
+
+- [ ] Add browser-encrypted notes (probably just symmetric encryption using the URL "hash")
+- [ ] Add merging/patching on save, so multiple clients can update a note without overwriting each-other
+- [ ] Consider moving to memcached or separate server from storage so more requests might be handled by the server
