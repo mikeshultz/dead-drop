@@ -21,6 +21,12 @@ cargo watch -x run
 helm install --create-namespace -n dead-pub dead-pub devops/kubernetes/charts/dead-drop -f devops/kubernetes/charts/dead-drop/values.yaml -f devops/kubernetes/values/dead-pub.yaml
 ```
 
+#### Upgrade
+
+```bash
+helm upgrade -n dead-pub dead-pub devops/kubernetes/charts/dead-drop -f devops/kubernetes/charts/dead-drop/values.yaml -f devops/kubernetes/values/dead-pub.yaml
+```
+
 ## TODO
 
 - [ ] Add browser-encrypted notes (probably just symmetric encryption using the URL "hash")
