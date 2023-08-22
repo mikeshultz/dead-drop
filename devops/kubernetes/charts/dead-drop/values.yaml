@@ -2,6 +2,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+title: "dead drop"
+
 # Service only designed to run as one instance
 replicaCount: 1
 

@@ -33,7 +33,7 @@
             }
         }
     </style>
-    <title>{% block title %}dead drop{% endblock title %}</title>
+    <title>{{ content_title }}</title>
     {% endblock head %}
 </head>
 <body>

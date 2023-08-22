@@ -196,14 +196,14 @@ fn get_note<'r>(
                 Some(note) => Left(Template::render(
                     "notepad",
                     context! {
-                        title: format!("{} ({})", title(), safe_name),
+                        content_title: format!("{} ({})", title(), safe_name),
                         note_body: note.body.as_str(),
                     },
                 )),
                 None => Left(Template::render(
                     "notepad",
                     context! {
-                        title: format!("{} ({})", title(), safe_name),
+                        content_title: format!("{} ({})", title(), safe_name),
                     },
                 )),
             };
@@ -218,7 +218,7 @@ fn index(_limiter: RocketGovernor<Limiter>) -> Template {
     Template::render(
         "index",
         context! {
-            title: title(),
+            content_title: title(),
         },
     )
 }
@@ -231,8 +231,8 @@ fn response_error_html(code: u16, message: &str) -> Template {
     Template::render(
         "error",
         context! {
-            title: format!("Error {} - {}", code, message),
-            error_description: "Penis",
+            content_title: title(),
+            error_description: format!("Error {} - {}", code, message),
         },
     )
 }

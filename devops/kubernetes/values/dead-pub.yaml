@@ -18,3 +18,5 @@ ingress:
      hosts:
        - dead.pub
        - www.dead.pub
+
+title: "dead.pub"

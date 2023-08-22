@@ -1,5 +1,4 @@
 {% extends "base" %}
-{% block title %}{% if title %}{{ title }}{% else %}{{ super() }}{% endif %}{% endblock title %}
 {% block head %}
     {{ super() }}
     <script type="text/javascript" src="static/dead-drop.js"></script>
