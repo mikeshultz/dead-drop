@@ -14,7 +14,7 @@ use std::env::var;
 use std::sync::Mutex;
 use std::time::SystemTime;
 
-const VALID_NAME: &str = r"^([A-Za-z0-9_-]{1,24})$";
+const VALID_NAME: &str = r"^([A-Za-z0-9_-]{1,255})$";
 const DEFAULT_TITLE: &str = "dead drop";
 
 ///
