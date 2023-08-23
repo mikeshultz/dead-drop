@@ -62,6 +62,10 @@ enum JsonResponse<T> {
     NotFound(Value),
 }
 
+#[derive(Responder)]
+#[response(content_type = "image/svg+xml")]
+pub struct RawSvg<R>(pub R);
+
 /// Get safe name from given param value
 fn safe_name(slug: &str) -> Option<&str> {
     let re = Regex::new(VALID_NAME).unwrap();
@@ -89,8 +93,8 @@ fn js(_limiter: RocketGovernor<Limiter>) -> content::RawJavaScript<&'static str>
 }
 
 #[get("/favicon.ico")]
-fn favicon() -> Status {
-    Status::NotFound
+fn favicon() -> RawSvg<&'static str> {
+    RawSvg(include_str!("../static/favicon.svg"))
 }
 
 #[get("/robots.txt")]
