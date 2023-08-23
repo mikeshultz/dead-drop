@@ -1,5 +1,21 @@
 {% extends "base" %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        h1 {
+            display: block;
+            position: absolute;
+            left: 5rem;
+            top: 0rem;
+        }
+        #logo {
+            height: 3rem;
+            width: 3rem;
+        }
+    </style>
+{% endblock head %}
 {% block content %}
+    <img id="logo" alt="{{ content_title }} logo" src="favicon.ico" />
     <h1>{{ content_title }}</h1>
     <p>Ephemeral permissionless scrach pads to share text.</p>
 
