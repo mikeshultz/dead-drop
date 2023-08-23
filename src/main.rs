@@ -17,6 +17,8 @@ use std::time::SystemTime;
 const VALID_NAME: &str = r"^([A-Za-z0-9_-]{1,255})$";
 const DEFAULT_TITLE: &str = "dead drop";
 
+static FAVICON: &'static str = include_str!("../static/favicon.svg");
+
 ///
 /// Data structures
 ///
@@ -93,8 +95,13 @@ fn js(_limiter: RocketGovernor<Limiter>) -> content::RawJavaScript<&'static str>
 }
 
 #[get("/favicon.ico")]
+fn favicon_old() -> RawSvg<&'static str> {
+    RawSvg(FAVICON)
+}
+
+#[get("/favicon.svg")]
 fn favicon() -> RawSvg<&'static str> {
-    RawSvg(include_str!("../static/favicon.svg"))
+    RawSvg(FAVICON)
 }
 
 #[get("/robots.txt")]
@@ -285,6 +292,7 @@ fn rocket() -> _ {
                 index,
                 js,
                 favicon,
+                favicon_old,
                 get_note,
                 get_note_json,
                 get_updated_json,
