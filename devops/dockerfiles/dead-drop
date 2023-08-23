@@ -21,6 +21,7 @@ COPY build.rs /build/
 COPY src/* /build/src/
 COPY src/components* /build/src/components
 COPY templates/* /build/templates/
+COPY static/favicon.ico /build/static/
 
 RUN ls -lah
 RUN yarn
