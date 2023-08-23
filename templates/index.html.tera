@@ -1,12 +1,14 @@
 {% extends "base" %}
 {% block content %}
     <h1>{{ content_title }}</h1>
-    <p>Temporary scrach pads to share text.</p>
+    <p>Ephemeral permissionless scrach pads to share text.</p>
 
     <h2>Usage</h2>
     <p>Use any slug URI and start writing.  For instance, check out <a href="/guestbook"><code>/guestbook</code></a> and say hi</p>
 
     <h2>Privacy</h2>
+    <p>All pads publicly readable and writable by anyone.  There is no authentication or authorization. <strong>Do not store sensitive information.</strong></p>
+
     <p><strong>All data is stored in memory only and may be lost at any time.</strong>  There's no intentional logging or permanent storage of request data, but some systems may store basic HTTP server logging including your IP address.</p>
 
     <hr />
