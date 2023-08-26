@@ -85,6 +85,43 @@ fn title() -> String {
     var("TITLE").unwrap_or(DEFAULT_TITLE.to_string())
 }
 
+/// Get unix timestamp
+fn unix_now() -> u64 {
+    SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .ok()
+        .expect("Failed to get system time")
+        .as_secs()
+}
+
+/// Create a 404 JSON response
+fn response_not_found_json<T>(msg: &str) -> JsonResponse<T> {
+    JsonResponse::NotFound(json!({
+        "success": false,
+        "code": 404,
+        "error": msg,
+    }))
+}
+
+/// Create an HTML error response
+fn response_error_html(code: u16, message: &str) -> Template {
+    Template::render(
+        "error",
+        context! {
+            content_title: title(),
+            error_description: format!("Error {} - {}", code, message),
+        },
+    )
+}
+
+/// Create a JSON error response string
+fn response_error_json(code: u16, message: &str) -> String {
+    format!(
+        "{{\"success\": false, \"code\": {}, \"error\": \"{}\"}}",
+        code, message
+    )
+}
+
 ///
 /// Routes
 ///
@@ -126,11 +163,7 @@ fn get_updated_json<'r>(
                 None => JsonResponse::Ok(Json(UpdatedResponse { updated: 0 })),
             };
         }
-        None => JsonResponse::NotFound(json!({
-            "success": false,
-            "code": 404,
-            "error": "Note not found",
-        })),
+        None => response_not_found_json("Note not found"),
     }
 }
 
@@ -143,12 +176,9 @@ fn post_note<'r>(
 ) -> JsonResponse<Note> {
     match safe_name(name) {
         Some(safe_name) => {
-            let now = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .ok()
-                .expect("Failed to get system time")
-                .as_secs();
+            let now = unix_now();
 
+            // Insert note into state
             state.notes.lock().unwrap().insert(
                 String::from(safe_name),
                 Note {
@@ -163,11 +193,7 @@ fn post_note<'r>(
             }))
         }
         // 404 on a bad name
-        None => JsonResponse::NotFound(json!({
-            "success": false,
-            "code": 400,
-            "error": "Invalid name",
-        })),
+        None => response_not_found_json("Invalid name"),
     }
 }
 
@@ -178,20 +204,15 @@ fn get_note_json<'r>(
     _limiter: RocketGovernor<Limiter>,
 ) -> JsonResponse<Note> {
     match safe_name(name) {
-        Some(safe_name) => {
-            return match state.notes.lock().unwrap().get(safe_name) {
-                Some(note) => JsonResponse::Ok(Json(note.clone())),
-                None => JsonResponse::Ok(Json(Note {
-                    body: String::new(),
-                    updated: 0,
-                })),
-            };
-        }
-        None => JsonResponse::NotFound(json!({
-            "success": false,
-            "code": 404,
-            "error": "Not found",
-        })),
+        Some(safe_name) => match state.notes.lock().unwrap().get(safe_name) {
+            Some(note) => JsonResponse::Ok(Json(note.clone())),
+            // If no existing note has been found, no harm in pretending
+            None => JsonResponse::Ok(Json(Note {
+                body: String::new(),
+                updated: 0,
+            })),
+        },
+        None => response_not_found_json("Note not found"),
     }
 }
 
@@ -202,23 +223,21 @@ fn get_note<'r>(
     _limiter: RocketGovernor<Limiter>,
 ) -> Either<Template, Redirect> {
     match safe_name(name) {
-        Some(safe_name) => {
-            return match state.notes.lock().unwrap().get(safe_name) {
-                Some(note) => Left(Template::render(
-                    "notepad",
-                    context! {
-                        content_title: format!("{} ({})", title(), safe_name),
-                        note_body: note.body.as_str(),
-                    },
-                )),
-                None => Left(Template::render(
-                    "notepad",
-                    context! {
-                        content_title: format!("{} ({})", title(), safe_name),
-                    },
-                )),
-            };
-        }
+        Some(safe_name) => match state.notes.lock().unwrap().get(safe_name) {
+            Some(note) => Left(Template::render(
+                "notepad",
+                context! {
+                    content_title: format!("{} ({})", title(), safe_name),
+                    note_body: note.body.as_str(),
+                },
+            )),
+            None => Left(Template::render(
+                "notepad",
+                context! {
+                    content_title: format!("{} ({})", title(), safe_name),
+                },
+            )),
+        },
         // 301 redirect to /
         None => Right(Redirect::moved("/")),
     }
@@ -237,23 +256,6 @@ fn index(_limiter: RocketGovernor<Limiter>) -> Template {
 ///
 /// Handlers
 ///
-
-fn response_error_html(code: u16, message: &str) -> Template {
-    Template::render(
-        "error",
-        context! {
-            content_title: title(),
-            error_description: format!("Error {} - {}", code, message),
-        },
-    )
-}
-
-fn response_error_json(code: u16, message: &str) -> String {
-    format!(
-        "{{\"success\": false, \"code\": {}, \"error\": \"{}\"}}",
-        code, message
-    )
-}
 
 /// Catch and handle the error statuses
 #[catch(default)]
