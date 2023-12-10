@@ -23,8 +23,25 @@ static FAVICON: &'static str = include_str!("../static/favicon.svg");
 /// Data structures
 ///
 
+#[derive(Clone, Debug)]
+struct InstanceId(u64);
+
+impl From<InstanceId> for u64 {
+    fn from(instance_id: InstanceId) -> u64 {
+        instance_id.0
+    }
+}
+
+impl Into<String> for InstanceId {
+    fn into(self) -> String {
+        let num: u64 = self.into();
+        format!("{:X}", num)
+    }
+}
+
 #[derive(Debug)]
 struct DeadState {
+    instance_id: InstanceId,
     notes: Mutex<HashMap<String, Note>>,
 }
 
@@ -148,6 +165,16 @@ Allow: /$\n\
 Disallow: /\n"
 }
 
+#[get("/id", format = "text/plain")]
+fn instance_id_plain<'r>(state: &'r rocket::State<DeadState>) -> String {
+    state.instance_id.clone().into()
+}
+
+#[get("/id", format = "application/json", rank = 2)]
+fn instance_id<'r>(state: &'r rocket::State<DeadState>) -> JsonResponse<String> {
+    JsonResponse::Ok(Json(state.instance_id.clone().into()))
+}
+
 #[get("/<name>/updated", format = "application/json")]
 fn get_updated_json<'r>(
     state: &'r rocket::State<DeadState>,
@@ -197,7 +224,7 @@ fn post_note<'r>(
     }
 }
 
-#[get("/<name>", format = "application/json", rank = 2)]
+#[get("/<name>", format = "application/json", rank = 4)]
 fn get_note_json<'r>(
     state: &'r rocket::State<DeadState>,
     name: &str,
@@ -216,7 +243,7 @@ fn get_note_json<'r>(
     }
 }
 
-#[get("/<name>", format = "text/html")]
+#[get("/<name>", format = "text/html", rank = 3)]
 fn get_note<'r>(
     state: &'r rocket::State<DeadState>,
     name: &str,
@@ -295,6 +322,8 @@ fn rocket() -> _ {
                 js,
                 favicon,
                 favicon_old,
+                instance_id_plain,
+                instance_id,
                 get_note,
                 get_note_json,
                 get_updated_json,
@@ -304,6 +333,7 @@ fn rocket() -> _ {
         )
         .register("/", catchers![default_catcher])
         .manage(DeadState {
+            instance_id: InstanceId(rand::random::<u64>()),
             notes: Mutex::new(HashMap::new()),
         })
         .attach(Template::fairing())
