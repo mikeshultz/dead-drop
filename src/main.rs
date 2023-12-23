@@ -249,11 +249,14 @@ fn get_note<'r>(
     name: &str,
     _limiter: RocketGovernor<Limiter>,
 ) -> Either<Template, Redirect> {
+    let instance_id: String = state.instance_id.clone().into();
+
     match safe_name(name) {
         Some(safe_name) => match state.notes.lock().unwrap().get(safe_name) {
             Some(note) => Left(Template::render(
                 "notepad",
                 context! {
+                    instance_id,
                     content_title: format!("{} ({})", title(), safe_name),
                     note_body: note.body.as_str(),
                 },
@@ -261,6 +264,7 @@ fn get_note<'r>(
             None => Left(Template::render(
                 "notepad",
                 context! {
+                    instance_id,
                     content_title: format!("{} ({})", title(), safe_name),
                 },
             )),
@@ -271,10 +275,13 @@ fn get_note<'r>(
 }
 
 #[get("/")]
-fn index(_limiter: RocketGovernor<Limiter>) -> Template {
+fn index<'r>(state: &'r rocket::State<DeadState>, _limiter: RocketGovernor<Limiter>) -> Template {
+    let instance_id: String = state.instance_id.clone().into();
+
     Template::render(
         "index",
         context! {
+            instance_id,
             content_title: title(),
         },
     )

@@ -1,6 +1,11 @@
 {% extends "base" %}
 {% block head %}
     {{ super() }}
+    {% if instance_id %}
+    <script type="text/javascript">
+        window.instanceId="{{ instance_id }}"
+    </script>
+    {% endif %}
     <script type="text/javascript" src="static/dead-drop.js"></script>
 {% endblock head %}
 {% block content %}
