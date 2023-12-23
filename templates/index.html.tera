@@ -22,10 +22,10 @@
     <h2>Usage</h2>
     <p>Use any slug URI and start writing.  For instance, check out <a href="/guestbook"><code>/guestbook</code></a> and say hi</p>
 
-    <p>You can also encrypt messages on the client side by including an encryption passphrase in the URI hash.  For instnace, <a href="/foobar#thisIsASharedKey">/foobar#thisIsASharedKey</a> will encrypt your message using the passphrase starting with <code>27c3...</code>.  Without this key, the message can not be decrypted.</p>
+    <p>You can also encrypt messages on the client side by including an encryption passphrase in the URI hash.  For instnace, <a href="/foobar#thisIsASharedKey">/foobar#thisIsASharedKey</a> will encrypt your message using the passphrase <code>thisIsASharedKey</code>.  Without this key, the message can not be decrypted.</p>
 
     <h2>Privacy</h2>
-    <p>All pads publicly readable and writable by anyone.  There is no authentication or authorization. <strong>Do not store sensitive information unencrypted (see above).</strong></p>
+    <p>All pads publicly readable and writable by anyone. There is no authentication or authorization. <strong>Do not store sensitive information unencrypted (see above).</strong></p>
 
     <p><strong>All data is stored in memory only and may be lost at any time.</strong>  There's no intentional logging or permanent storage of request data, but some systems may store basic HTTP server logging including your IP address.</p>
 
