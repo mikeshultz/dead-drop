@@ -22,7 +22,7 @@
     <h2>Usage</h2>
     <p>Use any slug URI and start writing.  For instance, check out <a href="/guestbook"><code>/guestbook</code></a> and say hi</p>
 
-    <p>You can also encrypt messages on the client side by including an encryption passphrase in the URI hash.  For instnace, <a href="/foobar#27c3a5bb60055743ac949ea6eeba9b9d9ee7">/foobar#27c3a5bb60055743ac949ea6eeba9b9d9ee7</a> will encrypt your message using the passphrase starting with <code>27c3...</code>.  Without this key, the message can not be decrypted.</p>
+    <p>You can also encrypt messages on the client side by including an encryption passphrase in the URI hash.  For instnace, <a href="/foobar#thisIsASharedKey">/foobar#thisIsASharedKey</a> will encrypt your message using the passphrase starting with <code>27c3...</code>.  Without this key, the message can not be decrypted.</p>
 
     <h2>Privacy</h2>
     <p>All pads publicly readable and writable by anyone.  There is no authentication or authorization. <strong>Do not store sensitive information unencrypted (see above).</strong></p>
