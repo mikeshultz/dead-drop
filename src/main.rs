@@ -16,6 +16,7 @@ use std::time::SystemTime;
 
 const VALID_NAME: &str = r"^([A-Za-z0-9_-]{1,255})$";
 const DEFAULT_TITLE: &str = "dead drop";
+const DEFAULT_POST_GUESTBOOK: &str = "John Internet wuz here '97";
 
 static FAVICON: &'static str = include_str!("../static/favicon.svg");
 
@@ -321,6 +322,16 @@ fn default_catcher(status: Status, request: &Request) -> Either<Template, String
 
 #[launch]
 fn rocket() -> _ {
+    // Set some default for fun
+    let notes = Mutex::new(HashMap::new());
+    notes.lock().unwrap().insert(
+        String::from("guestbook"),
+        Note {
+            body: String::from(DEFAULT_POST_GUESTBOOK),
+            updated: unix_now(),
+        },
+    );
+
     rocket::build()
         .mount(
             "/",
@@ -341,7 +352,7 @@ fn rocket() -> _ {
         .register("/", catchers![default_catcher])
         .manage(DeadState {
             instance_id: InstanceId(rand::random::<u64>()),
-            notes: Mutex::new(HashMap::new()),
+            notes,
         })
         .attach(Template::fairing())
 }
