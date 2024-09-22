@@ -8,7 +8,7 @@ declare global {
 
 document.addEventListener("DOMContentLoaded", function (event) {
   // Ensure TLS connection if JS is enabled (required for client-side encryption)
-  if (window.location.protocol !== "https:") {
+  if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
     window.location.protocol = "https:"
   }
 
