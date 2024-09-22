@@ -29,7 +29,7 @@
 
   const md5 = new MD5()
 
-  const NAME = document.location.toString().split("/").pop()
+  const NAME = document.location.toString().split("/").pop().split('#').slice(0,1)
   const CHECK_INTERVAL = 3000
   const SAVE_COUNTDOWN_DURATION = 2000
 
