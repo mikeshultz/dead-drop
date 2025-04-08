@@ -8,7 +8,7 @@ title: "dead drop"
 replicaCount: 1
 
 image:
-  repository: registry.mikes.network/dead-drop
+  repository: image.mikes.network/mikeshultz/dead-drop
   pullPolicy: IfNotPresent
   tag: latest
 
