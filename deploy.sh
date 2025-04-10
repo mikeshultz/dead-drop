@@ -8,7 +8,7 @@ export NAMESPACE="dead-pub"
 
 # Figure out our docker tags
 export BUILD_ID="$(date +%Y%m%d%H%M%S)"
-export REGISTRY="registry.mikes.network/$NAME"
+export REGISTRY="image.mikes.network/mikeshultz/$NAME"
 export TAG="$REGISTRY:$BUILD_ID"
 
 echo "Building $TAG..."
