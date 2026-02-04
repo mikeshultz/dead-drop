@@ -1,35 +1,17 @@
-<style type="text/css">
-  textarea.notepad {
-    border: 1px var(--bord) solid;
-    width: 95vh; /* fallback */
-    width: calc(95vw - 1.7rem);
-    height: 90vh; /* fallback */
-    height: calc(90vh - 3rem);
-    margin: 0.5rem;
-    margin-top: 1.5rem;
-    padding: 0.75rem;
-    font-size: 2rem;
-  }
-
-  /* vw > mobile */
-  @media (min-width: 648px) {
-    textarea.notepad {
-      font-size: 1rem;
-      width: calc(100vw - 4rem);
-      height: calc(100vh - 6rem);
-    }
-  }
-</style>
-
-<script type="text/typescript" lang="ts">
+<script lang="ts">
   import { MD5 } from "jshashes"
-  import { onDestroy } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import crypto, { EncryptedMessage } from "../crypto"
   import Status from "./status"
 
   const md5 = new MD5()
 
-  const NAME = document.location.toString().split("/").pop().split('#').slice(0,1)
+  const NAME = document.location
+    .toString()
+    .split("/")
+    .pop()
+    .split("#")
+    .slice(0, 1)
   const CHECK_INTERVAL = 3000
   const SAVE_COUNTDOWN_DURATION = 2000
 
@@ -42,12 +24,12 @@
   let countdownTick: ReturnType<typeof setInterval> | undefined
   let countdownStartTimeout: ReturnType<typeof setTimeout> | undefined
 
-  let loaded = false
-  let lastUpdated = 0
-  let lastUpdatedHuman = ""
-  let percentUntilSave = 0
-  let value = "Loading...."
-  let valueHash = ""
+  let loaded = $state(false)
+  let lastUpdated = $state(0)
+  let lastUpdatedHuman = $state("")
+  let percentUntilSave = $state(0)
+  let value = $state("Loading....")
+  let valueHash = $state("")
 
   console.log("instanceId:", instanceId)
 
@@ -66,7 +48,7 @@
   }
 
   function looksLikeEncryptedMessage(body: string): boolean {
-    return body && body.startsWith("{") && body.includes('"iv"')
+    return !!body && body.startsWith("{") && body.includes('"iv"')
   }
 
   function encryptMaybe(noteValue: string): Promise<string> {
@@ -166,25 +148,27 @@
     }, 500)
   }
 
-  $: if (!loaded) {
-    const ssrBody = document.getElementById("ssrbody")?.getAttribute("value")
-    if (ssrBody) {
-      // Load note from server-side rendered hidden form
-      const ssrUpdated = document
-        .getElementById("ssrupdated")
-        ?.getAttribute("value")
-      update({
-        body: ssrBody,
-        updated: ssrUpdated ? parseInt(ssrUpdated) : 0,
-      })
-      loaded = true
-    } else {
-      // Load note from API
-      loadNote().then(() => {
+  $effect(() => {
+    if (!loaded) {
+      const ssrBody = document.getElementById("ssrbody")?.getAttribute("value")
+      if (ssrBody) {
+        // Load note from server-side rendered hidden form
+        const ssrUpdated = document
+          .getElementById("ssrupdated")
+          ?.getAttribute("value")
+        update({
+          body: ssrBody,
+          updated: ssrUpdated ? parseInt(ssrUpdated) : 0,
+        })
         loaded = true
-      })
+      } else {
+        // Load note from API
+        loadNote().then(() => {
+          loaded = true
+        })
+      }
     }
-  }
+  })
 
   onDestroy(() => {
     if (countdownTick) clearInterval(countdownTick)
@@ -200,5 +184,29 @@
   }
 </script>
 
-<textarea class="notepad" bind:value on:keyup="{onKeyUp}" />
-<Status percent="{percentUntilSave}" lastUpdated="{lastUpdated}" />
+<textarea class="notepad" bind:value disabled={!loaded} onkeyup={onKeyUp}
+></textarea>
+<Status percent={percentUntilSave} {lastUpdated} />
+
+<style type="text/css">
+  textarea.notepad {
+    border: 1px var(--bord) solid;
+    width: 95vh; /* fallback */
+    width: calc(95vw - 1.7rem);
+    height: 90vh; /* fallback */
+    height: calc(90vh - 3rem);
+    margin: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+    font-size: 2rem;
+  }
+
+  /* vw > mobile */
+  @media (min-width: 648px) {
+    textarea.notepad {
+      font-size: 1rem;
+      width: calc(100vw - 4rem);
+      height: calc(100vh - 6rem);
+    }
+  }
+</style>

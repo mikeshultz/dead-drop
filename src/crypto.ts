@@ -18,6 +18,19 @@ function remove0x(s: string): string {
 }
 
 /**
+ * @dev Convert an array to a hex string
+ * @param Uint8Array data
+ * @returns The encoded hex string
+ */
+function arr2Hex(arr: Uint8Array): HexString {
+  let hex = "0x"
+  for (let i = 0; i < arr.length; i++) {
+    hex += arr[i].toString(16).padStart(2, "0")
+  }
+  return hex as HexString
+}
+
+/**
  * @dev Convert a buffer to a hex string
  * @param buffer ArrayBuffer data
  * @returns The encoded hex string
@@ -35,11 +48,9 @@ function buf2Hex(buffer: ArrayBuffer): HexString {
  * @returns ArrayBuffer data
  */
 function hex2Buf(hex: string): ArrayBuffer {
-  return new Uint8Array(
-    remove0x(hex)
-      .match(/.{1,2}/g)
-      .map((byte) => parseInt(byte, 16))
-  ).buffer
+  const plain = remove0x(hex).match(/.{1,2}/g)
+  if (plain === null) throw Error("Invalid hex string")
+  return new Uint8Array(plain.map((byte) => parseInt(byte, 16))).buffer
 }
 
 /**
@@ -50,7 +61,7 @@ function hex2Buf(hex: string): ArrayBuffer {
 async function passwordKey(password: string): Promise<CryptoKey> {
   return await subtle.importKey(
     "raw",
-    new TextEncoder().encode(password),
+    new TextEncoder().encode(password).buffer,
     {
       name: "PBKDF2",
     },
@@ -98,7 +109,7 @@ async function encrypt(
   message: string,
   password: string
 ): Promise<EncryptedMessage> {
-  const salt = buf2Hex(globalThis.crypto.getRandomValues(new Uint8Array(16)))
+  const salt = arr2Hex(globalThis.crypto.getRandomValues(new Uint8Array(16)))
   const key = await deriveKey(salt, password)
   const iv = globalThis.crypto.getRandomValues(new Uint8Array(16))
   const algo = {
@@ -113,7 +124,7 @@ async function encrypt(
 
   return {
     salt: salt,
-    iv: buf2Hex(iv),
+    iv: arr2Hex(iv),
     cipherText: buf2Hex(cipherText),
   }
 }
