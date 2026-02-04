@@ -1,3 +1,5 @@
+import { mount } from "svelte"
+
 import Notepad from "./components/notepad.svelte"
 
 declare global {
@@ -8,11 +10,18 @@ declare global {
 
 document.addEventListener("DOMContentLoaded", function (event) {
   // Ensure TLS connection if JS is enabled (required for client-side encryption)
-  if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+  if (
+    window.location.protocol !== "https:" &&
+    window.location.hostname !== "localhost"
+  ) {
     window.location.protocol = "https:"
   }
 
-  new Notepad({
-    target: document.getElementById("notepad"), // entry point in ../public/index.html
-  })
+  const target = document.getElementById("notepad")
+  if (target) {
+    // entry point in ../public/index.html
+    mount(Notepad, { target })
+  } else {
+    throw new Error("Target element not found")
+  }
 })

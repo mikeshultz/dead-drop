@@ -1,3 +1,17 @@
+<script lang="ts">
+  let { lastUpdated, percent }: { lastUpdated: number; percent: number } =
+    $props()
+
+  function humanUnixTime(unix: number): string {
+    return unix ? new Date(unix * 1000).toLocaleString() : ""
+  }
+</script>
+
+<div id="status">
+  <div class="updated">{humanUnixTime(lastUpdated)}</div>
+  <div class="progress" style:width={`${percent}%`}></div>
+</div>
+
 <!-- 
 Component that displays last saved time, and shows save progress bar.
 //-->
@@ -30,17 +44,3 @@ Component that displays last saved time, and shows save progress bar.
     background-color: #eee;
   }
 </style>
-
-<script type="text/typescript" lang="ts">
-  export let lastUpdated: number = 0
-  export let percent: number = 0
-
-  function humanUnixTime(unix: number): string {
-    return unix ? new Date(unix * 1000).toLocaleString() : ""
-  }
-</script>
-
-<div id="status">
-  <div class="updated">{humanUnixTime(lastUpdated)}</div>
-  <div class="progress" style:width="{`${percent}%`}"></div>
-</div>
