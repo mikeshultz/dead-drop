@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 either = { version = "1.9.0", features = ["serde"] }
 hex = "0.4.3"
-rand = "0.8.5"
+rand = "0.9.3"
 regex = "1.10"
 rocket = { version = "0.5", features = ["json"] }
 rocket-governor = "0.2.0-rc.3"
