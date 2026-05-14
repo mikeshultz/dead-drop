@@ -9,7 +9,7 @@
     "dependencies":
     {
         "jshashes": "^1.0.8",
-        "svelte": "^5.53.5"
+        "svelte": "^5.55.7"
     },
     "devDependencies":
     {
