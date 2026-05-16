@@ -1,0 +1,36 @@
+{{- if and .Values.gateway.enabled (not .Values.gateway.clusterGateway) -}}
+{{- $fullName := include "dead-drop.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $fullName }}-gateway
+  labels:
+    {{- include "dead-drop.labels" . | nindent 4 }}
+  {{- with .Values.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ .Values.gateway.className }}
+  listeners:
+  {{- range .Values.gateway.hosts }}
+  - hostname: {{ . | quote }}
+    name: {{ . | replace "." "-" }}-http
+    port: 80
+    protocol: HTTP
+  {{- end }}
+{{- if .Values.gateway.tls }}
+  {{- range .Values.gateway.tls }}
+  - hostname: {{ .host | quote }}
+    name: {{ .host | replace "." "-" }}-https
+    port: 443
+    protocol: HTTPS
+    tls:
+      certificateRefs:
+      - group: ""
+        kind: Secret
+        name: {{ .secretName }}
+  {{- end }}
+{{- end }}
+{{- end }}
